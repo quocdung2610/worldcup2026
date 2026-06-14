@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dự đoán World Cup 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+.app { max-width: 700px; margin: 0 auto; padding: 0 0 40px; }
+header { background: #0a3d6b; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+header h1 { font-size: 18px; font-weight: 600; }
+header span { font-size: 13px; opacity: 0.7; }
+.tab-bar { display: flex; background: white; border-bottom: 1px solid #e0e0e0; position: sticky; top: 58px; z-index: 99; }
+.tab { flex: 1; padding: 13px 0; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: #888; text-align: center; transition: all 0.15s; }
+.tab.active { border-bottom-color: #0a3d6b; color: #0a3d6b; }
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+.name-box { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.name-box label { font-size: 13px; color: #666; display: block; margin-bottom: 8px; font-weight: 500; }
+.name-row { display: flex; gap: 10px; align-items: center; }
+.name-row input { flex: 1; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.15s; }
+.name-row input:focus { border-color: #0a3d6b; }
+.name-badge { background: #0a3d6b; color: white; border-radius: 24px; padding: 8px 16px; font-size: 14px; font-weight: 600; min-width: 60px; text-align: center; }
+.section-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; color: #0a3d6b; }
+.day-label { font-size: 13px; font-weight: 700; color: #555; margin: 20px 0 10px; padding: 6px 12px; background: #e8f0fb; border-radius: 8px; display: inline-block; }
+.match-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1.5px solid transparent; transition: border-color 0.15s; }
+.match-card.has-pick { border-color: #c3daf7; }
+.match-header { display: flex; gap: 6px; margin-bottom: 10px; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 6px; font-weight: 600; }
+.badge-date { background: #f0f0f0; color: #555; }
+.badge-group { background: #e8f0fb; color: #0a3d6b; }
+.teams-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
+.team { font-size: 14px; font-weight: 600; flex: 1; }
+.team.right { text-align: right; }
+.vs { font-size: 12px; color: #aaa; font-weight: 700; flex-shrink: 0; }
+.bet-row { display: flex; gap: 8px; }
+.bet-btn { flex: 1; padding: 8px 6px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fafafa; color: #666; transition: all 0.15s; text-align: center; }
+.bet-btn:hover { background: #f0f0f0; color: #333; }
+.bet-btn.sel-win { background: #eaf5e3; color: #2a7a1a; border-color: #4caf50; }
+.bet-btn.sel-draw { background: #fff8e1; color: #a06000; border-color: #ffc107; }
+.bet-btn.sel-lose { background: #fdecea; color: #b71c1c; border-color: #f44336; }
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-btn { padding: 5px 14px; border: 1.5px solid #e0e0e0; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #666; transition: all 0.15s; }
+.filter-btn.active { background: #0a3d6b; color: white; border-color: #0a3d6b; }
+.submit-btn { width: 100%; padding: 14px; background: #0a3d6b; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+.submit-btn:hover { opacity: 0.88; }
+.submit-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: rgba(245,245,245,0.97); padding: 12px 16px 20px; box-shadow: 0 -2px 12px rgba(0,0,0,0.12); }
+.admin-pw-wrap { text-align: center; padding: 40px 20px; }
+.admin-pw-wrap h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.admin-pw-wrap p { font-size: 14px; color: #888; margin-bottom: 20px; }
+.admin-pw-wrap input { display: block; width: 240px; margin: 0 auto 12px; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 15px; text-align: center; outline: none; }
+.admin-pw-wrap input:focus { border-color: #0a3d6b; }
+.admin-pw-wrap button { padding: 10px 32px; background: #0a3d6b; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.admin-pw-wrap .hint { font-size: 12px; color: #aaa; margin-top: 10px; }
+.summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+.metric { background: white; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.metric-val { font-size: 24px; font-weight: 700; color: #0a3d6b; }
+.metric-lbl { font-size: 12px; color: #888; margin-top: 4px; }
+.admin-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.player-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.player-name { font-size: 16px; font-weight: 700; }
+.player-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
+.money-pos { color: #2a7a1a; font-size: 18px; font-weight: 700; }
+.money-neg { color: #b71c1c; font-size: 18px; font-weight: 700; }
+.money-zero { color: #555; font-size: 18px; font-weight: 700; }
+.picks-list { border-top: 1px solid #f0f0f0; padding-top: 8px; }
+.pick-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f8f8f8; font-size: 12px; }
+.pick-item:last-child { border-bottom: none; }
+.res-badge { font-size: 11px; padding: 2px 10px; border-radius: 6px; font-weight: 600; }
+.rb-win { background: #eaf5e3; color: #2a7a1a; }
+.rb-lose { background: #fdecea; color: #b71c1c; }
+.rb-pending { background: #f0f0f0; color: #888; }
+.set-result-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.set-result-row select { flex: 1; padding: 7px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: white; }
+.set-result-row button { padding: 7px 16px; background: #0a3d6b; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.logout-btn { padding: 6px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; cursor: pointer; background: white; color: #666; font-weight: 600; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0a3d6b; color: white; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+.toast.show { opacity: 1; }
+.empty-msg { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
+.penalty-info { background: #fff8e1; border: 1px solid #ffc107; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #7a5000; }
+.penalty-info strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.rank-badge { font-size: 18px; margin-right: 4px; }
+.voters-row { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
+.voter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.voter-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; }
+.voter-chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.chip { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+.chip-win { background: #eaf5e3; color: #2a7a1a; }
+.chip-draw { background: #fff8e1; color: #a06000; }
+.chip-lose { background: #fdecea; color: #b71c1c; }
+.chip-empty { font-size: 11px; color: #ccc; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span style="font-size:28px;">⚽</span>
+    <div>
+      <h1>World Cup 2026 — Dự đoán</h1>
+      <span>Vòng bảng từ 15/06 đến 27/06</span>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('predict')">⚽ Dự đoán</div>
+    <div class="tab" onclick="switchTab('admin')">🛡️ Admin</div>
+  </div>
+
+  <!-- PREDICT PAGE -->
+  <div id="page-predict" class="page active">
+    <div class="name-box">
+      <label>👤 Tên người dự đoán</label>
+      <div class="name-row">
+        <input type="text" id="player-name" placeholder="Nhập tên của bạn..." oninput="updateNameBadge()" />
+        <div class="name-badge" id="name-badge">?</div>
+      </div>
+    </div>
+
+    <div class="penalty-info">
+      <strong>💰 Luật tính tiền</strong>
+      Đoán đúng → Không mất gì &nbsp;|&nbsp; Hòa → -5.000đ &nbsp;|&nbsp; Đoán sai → -10.000đ
+    </div>
+
+    <div class="section-title">Lịch thi đấu vòng bảng</div>
+    <div class="filter-row" id="filter-row"></div>
+    <div id="matches-container" style="padding-bottom: 80px;"></div>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div id="page-admin" class="page">
+    <div id="admin-lock">
+      <div class="admin-pw-wrap">
+        <h2>🛡️ Trang quản trị</h2>
+        <p>Nhập mật khẩu để xem và chỉnh sửa kết quả</p>
+        <input type="password" id="admin-pw-input" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')checkAdmin()" />
+        <button onclick="checkAdmin()">Đăng nhập</button>
+        <p class="hint">Mật khẩu mặc định: <strong>admin123</strong></p>
+      </div>
+    </div>
+
+    <div id="admin-panel" style="display:none;">
+      <div class="admin-top">
+        <div class="section-title" style="margin:0;">📊 Tổng kết</div>
+        <button class="logout-btn" onclick="lockAdmin()">Đăng xuất</button>
+      </div>
+
+      <div class="summary-grid" id="admin-summary"></div>
+
+      <div class="section-title" style="font-size:15px; margin-bottom:10px;">✏️ Cập nhật kết quả thực tế</div>
+      <div id="admin-matches"></div>
+
+      <div class="section-title" style="font-size:15px; margin:20px 0 10px;">🏆 Bảng xếp hạng người chơi</div>
+      <div id="admin-players"></div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar" id="submit-bar">
+  <button class="submit-btn" onclick="submitPrediction()" id="submit-btn-main">📤 Gửi dự đoán</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const MATCHES = [
+  {id:'m01',date:'15/06',group:'F',home:'🇸🇪 Thụy Điển',away:'🇹🇳 Tunisia',homeCode:'SWE',awayCode:'TUN'},
+  {id:'m02',date:'15/06',group:'H',home:'🇪🇸 Tây Ban Nha',away:'🇨🇻 Cabo Verde',homeCode:'ESP',awayCode:'CPV'},
+  {id:'m03',date:'15/06',group:'G',home:'🇧🇪 Bỉ',away:'🇪🇬 Ai Cập',homeCode:'BEL',awayCode:'EGY'},
+  {id:'m04',date:'15/06',group:'H',home:'🇸🇦 Ả Rập Saudi',away:'🇺🇾 Uruguay',homeCode:'KSA',awayCode:'URU'},
+  {id:'m05',date:'15/06',group:'G',home:'🇮🇷 Iran',away:'🇳🇿 New Zealand',homeCode:'IRN',awayCode:'NZL'},
+  {id:'m06',date:'16/06',group:'I',home:'🇫🇷 Pháp',away:'🇸🇳 Senegal',homeCode:'FRA',awayCode:'SEN'},
+  {id:'m07',date:'16/06',group:'I',home:'🇮🇶 Iraq',away:'🇳🇴 Na Uy',homeCode:'IRQ',awayCode:'NOR'},
+  {id:'m08',date:'16/06',group:'J',home:'🇦🇹 Áo',away:'🇯🇴 Jordan',homeCode:'AUT',awayCode:'JOR'},
+  {id:'m09',date:'16/06',group:'B',home:'🇦🇷 Argentina',away:'🇰🇪 Kenya',homeCode:'ARG',awayCode:'KEN'},
+  {id:'m10',date:'16/06',group:'C',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',away:'🇨🇴 Colombia',homeCode:'SCO',awayCode:'COL'},
+  {id:'m11',date:'17/06',group:'D',home:'🇺🇸 Mỹ',away:'🇧🇦 Bosnia',homeCode:'USA',awayCode:'BIH'},
+  {id:'m12',date:'17/06',group:'E',home:'🇩🇪 Đức',away:'🇵🇹 Bồ Đào Nha',homeCode:'GER',awayCode:'POR'},
+  {id:'m13',date:'17/06',group:'J',home:'🇩🇿 Algeria',away:'🇿🇦 Nam Phi',homeCode:'ALG',awayCode:'RSA'},
+  {id:'m14',date:'17/06',group:'K',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',away:'🇭🇷 Croatia',homeCode:'ENG',awayCode:'CRO'},
+  {id:'m15',date:'18/06',group:'A',home:'🇲🇽 Mexico',away:'🇰🇷 Hàn Quốc',homeCode:'MEX',awayCode:'KOR'},
+  {id:'m16',date:'18/06',group:'B',home:'🇪🇨 Ecuador',away:'🇦🇴 Angola',homeCode:'ECU',awayCode:'ANG'},
+  {id:'m17',date:'18/06',group:'C',home:'🇨🇦 Canada',away:'🇨🇿 Séc',homeCode:'CAN',awayCode:'CZE'},
+  {id:'m18',date:'18/06',group:'F',home:'🇧🇦 Bosnia',away:'🇨🇭 Thụy Sĩ',homeCode:'BIH',awayCode:'SUI'},
+  {id:'m19',date:'18/06',group:'D',home:'🇶🇦 Qatar',away:'🇧🇴 Bolivia',homeCode:'QAT',awayCode:'BOL'},
+  {id:'m20',date:'19/06',group:'L',home:'🇧🇷 Brazil',away:'🇲🇦 Maroc',homeCode:'BRA',awayCode:'MAR'},
+  {id:'m21',date:'19/06',group:'A',home:'🇿🇦 Nam Phi',away:'🇨🇿 Séc',homeCode:'RSA',awayCode:'CZE'},
+  {id:'m22',date:'19/06',group:'K',home:'🇵🇦 Panama',away:'🇬🇭 Ghana',homeCode:'PAN',awayCode:'GHA'},
+  {id:'m23',date:'19/06',group:'L',home:'🇭🇹 Haiti',away:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',homeCode:'HAI',awayCode:'SCO'},
+  {id:'m24',date:'20/06',group:'G',home:'🇧🇪 Bỉ',away:'🇮🇷 Iran',homeCode:'BEL',awayCode:'IRN'},
+  {id:'m25',date:'20/06',group:'H',home:'🇪🇸 Tây Ban Nha',away:'🇸🇦 Ả Rập Saudi',homeCode:'ESP',awayCode:'KSA'},
+  {id:'m26',date:'20/06',group:'F',home:'🇸🇪 Thụy Điển',away:'🇳🇱 Hà Lan',homeCode:'SWE',awayCode:'NED'},
+  {id:'m27',date:'20/06',group:'L',home:'🇲🇦 Maroc',away:'🇭🇹 Haiti',homeCode:'MAR',awayCode:'HAI'},
+  {id:'m28',date:'21/06',group:'I',home:'🇫🇷 Pháp',away:'🇮🇶 Iraq',homeCode:'FRA',awayCode:'IRQ'},
+  {id:'m29',date:'21/06',group:'G',home:'🇳🇿 New Zealand',away:'🇪🇬 Ai Cập',homeCode:'NZL',awayCode:'EGY'},
+  {id:'m30',date:'21/06',group:'H',home:'🇺🇾 Uruguay',away:'🇨🇻 Cabo Verde',homeCode:'URU',awayCode:'CPV'},
+  {id:'m31',date:'22/06',group:'J',home:'🇦🇷 Argentina',away:'🇦🇹 Áo',homeCode:'ARG',awayCode:'AUT'},
+  {id:'m32',date:'22/06',group:'J',home:'🇯🇴 Jordan',away:'🇩🇿 Algeria',homeCode:'JOR',awayCode:'ALG'},
+  {id:'m33',date:'22/06',group:'B',home:'🇦🇷 Argentina',away:'🇪🇨 Ecuador',homeCode:'ARG',awayCode:'ECU'},
+  {id:'m34',date:'23/06',group:'E',home:'🇩🇪 Đức',away:"Cote d'Ivoire",homeCode:'GER',awayCode:'CIV'},
+  {id:'m35',date:'23/06',group:'K',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',away:'🇵🇦 Panama',homeCode:'ENG',awayCode:'PAN'},
+  {id:'m36',date:'24/06',group:'D',home:'🇺🇸 Mỹ',away:'🇶🇦 Qatar',homeCode:'USA',awayCode:'QAT'},
+  {id:'m37',date:'24/06',group:'C',home:'🇨🇦 Canada',away:'🇨🇴 Colombia',homeCode:'CAN',awayCode:'COL'},
+  {id:'m38',date:'24/06',group:'K',home:'🇵🇦 Panama',away:'🇭🇷 Croatia',homeCode:'PAN',awayCode:'CRO'},
+  {id:'m39',date:'25/06',group:'I',home:'🇸🇳 Senegal',away:'🇳🇴 Na Uy',homeCode:'SEN',awayCode:'NOR'},
+  {id:'m40',date:'25/06',group:'L',home:'🇧🇷 Brazil',away:'🇭🇹 Haiti',homeCode:'BRA',awayCode:'HAI'},
+  {id:'m41',date:'25/06',group:'A',home:'🇲🇽 Mexico',away:'🇨🇿 Séc',homeCode:'MEX',awayCode:'CZE'},
+  {id:'m42',date:'26/06',group:'F',home:'🇳🇱 Hà Lan',away:'🇯🇵 Nhật Bản',homeCode:'NED',awayCode:'JPN'},
+  {id:'m43',date:'26/06',group:'G',home:'🇪🇬 Ai Cập',away:'🇮🇷 Iran',homeCode:'EGY',awayCode:'IRN'},
+  {id:'m44',date:'26/06',group:'G',home:'🇳🇿 New Zealand',away:'🇧🇪 Bỉ',homeCode:'NZL',awayCode:'BEL'},
+  {id:'m45',date:'26/06',group:'H',home:'🇨🇻 Cabo Verde',away:'🇸🇦 Ả Rập Saudi',homeCode:'CPV',awayCode:'KSA'},
+  {id:'m46',date:'26/06',group:'H',home:'🇺🇾 Uruguay',away:'🇪🇸 Tây Ban Nha',homeCode:'URU',awayCode:'ESP'},
+  {id:'m47',date:'27/06',group:'E',home:"Cote d'Ivoire",away:'🇩🇪 Đức',homeCode:'CIV',awayCode:'GER'},
+  {id:'m48',date:'27/06',group:'K',home:'🇬🇭 Ghana',away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',homeCode:'GHA',awayCode:'ENG'},
+  {id:'m49',date:'27/06',group:'L',home:'🇲🇦 Maroc',away:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',homeCode:'MAR',awayCode:'SCO'},
+  {id:'m50',date:'27/06',group:'I',home:'🇫🇷 Pháp',away:'🇸🇳 Senegal',homeCode:'FRA',awayCode:'SEN'},
+];
+
+let picks = {};
+let playerName = '';
+let submissions = JSON.parse(localStorage.getItem('wc26_submissions') || '[]');
+let results = JSON.parse(localStorage.getItem('wc26_results') || '{}');
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i===0&&tab==='predict')||(i===1&&tab==='admin')));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('submit-bar').style.display = tab === 'predict' ? 'block' : 'none';
+  if (tab === 'admin') renderAdmin();
+}
+
+function updateNameBadge() {
+  playerName = document.getElementById('player-name').value.trim();
+  document.getElementById('name-badge').textContent = playerName || '?';
+}
+
+function getDates() {
+  return [...new Set(MATCHES.map(m => m.date))];
+}
+
+function getVotersForMatch(matchId) {
+  const voters = { win: [], draw: [], lose: [] };
+  submissions.forEach(s => {
+    if (s.picks[matchId]) voters[s.picks[matchId]].push(s.name);
+  });
+  return voters;
+}
+
+function renderVotersRow(matchId, m) {
+  const v = getVotersForMatch(matchId);
+  const hasAny = v.win.length || v.draw.length || v.lose.length;
+  if (!hasAny) return '';
+  const chips = (names, cls) => names.length
+    ? names.map(n => `<span class="chip ${cls}">${n}</span>`).join('')
+    : `<span class="chip-empty">—</span>`;
+  return `<div class="voters-row">
+    <div class="voter-group">
+      <div class="voter-group-label">🏆 ${m.homeCode} thắng</div>
+      <div class="voter-chips">${chips(v.win, 'chip-win')}</div>
+    </div>
+    <div class="voter-group">
+      <div class="voter-group-label">🤝 Hòa</div>
+      <div class="voter-chips">${chips(v.draw, 'chip-draw')}</div>
+    </div>
+    <div class="voter-group">
+      <div class="voter-group-label">❌ ${m.awayCode} thắng</div>
+      <div class="voter-chips">${chips(v.lose, 'chip-lose')}</div>
+    </div>
+  </div>`;
+}
+
+function renderMatches(filterDate) {
+  submissions = JSON.parse(localStorage.getItem('wc26_submissions') || '[]');
+  const cont = document.getElementById('matches-container');
+  const dates = getDates();
+  let html = '';
+  dates.forEach(date => {
+    if (filterDate && filterDate !== 'all' && date !== filterDate) return;
+    const dayMatches = MATCHES.filter(m => m.date === date);
+    html += `<div class="day-label">📅 Ngày ${date} (${dayMatches.length} trận)</div>`;
+    dayMatches.forEach(m => {
+      const p = picks[m.id] || '';
+      html += `<div class="match-card ${p ? 'has-pick' : ''}" id="card-${m.id}">
+        <div class="match-header">
+          <span class="badge badge-date">${m.date}</span>
+          <span class="badge badge-group">Bảng ${m.group}</span>
+        </div>
+        <div class="teams-row">
+          <div class="team">${m.home}</div>
+          <div class="vs">VS</div>
+          <div class="team right">${m.away}</div>
+        </div>
+        <div class="bet-row">
+          <div class="bet-btn ${p==='win'?'sel-win':''}" onclick="setPick('${m.id}','win',this)">🏆 ${m.homeCode} thắng</div>
+          <div class="bet-btn ${p==='draw'?'sel-draw':''}" onclick="setPick('${m.id}','draw',this)">🤝 Hòa</div>
+          <div class="bet-btn ${p==='lose'?'sel-lose':''}" onclick="setPick('${m.id}','lose',this)">❌ ${m.awayCode} thắng</div>
+        </div>
+        ${renderVotersRow(m.id, m)}
+      </div>`;
+    });
+  });
+  cont.innerHTML = html;
+}
+
+function renderFilters() {
+  const dates = getDates();
+  let html = `<div class="filter-btn active" data-date="" onclick="filterDate('all',this)">Tất cả</div>`;
+  dates.forEach(d => {
+    html += `<div class="filter-btn" data-date="${d}" onclick="filterDate('${d}',this)">📅 ${d}</div>`;
+  });
+  document.getElementById('filter-row').innerHTML = html;
+}
+
+function filterDate(d, el) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderMatches(d === 'all' ? null : d);
+}
+
+function setPick(id, choice, el) {
+  picks[id] = choice;
+  const parent = el.closest('.bet-row');
+  parent.querySelectorAll('.bet-btn').forEach(b => b.className = 'bet-btn');
+  el.classList.add(choice==='win'?'sel-win':choice==='draw'?'sel-draw':'sel-lose');
+  el.closest('.match-card').classList.add('has-pick');
+}
+
+function submitPrediction() {
+  if (!playerName) { showToast('⚠️ Vui lòng nhập tên!'); return; }
+  const pickedCount = Object.keys(picks).length;
+  if (pickedCount === 0) { showToast('⚠️ Chưa chọn trận nào!'); return; }
+  const entry = { name: playerName, picks: {...picks}, time: new Date().toLocaleString('vi-VN') };
+  const existing = submissions.findIndex(s => s.name === playerName);
+  if (existing >= 0) submissions[existing] = entry;
+  else submissions.push(entry);
+  localStorage.setItem('wc26_submissions', JSON.stringify(submissions));
+  showToast(`✅ Đã lưu ${pickedCount} dự đoán cho ${playerName}!`);
+  const activeFilter = document.querySelector('.filter-btn.active');
+  const activeDate = activeFilter && activeFilter.dataset.date ? activeFilter.dataset.date : null;
+  renderMatches(activeDate);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function checkAdmin() {
+  const pw = document.getElementById('admin-pw-input').value;
+  if (pw === 'admin123') {
+    document.getElementById('admin-lock').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    renderAdmin();
+  } else {
+    showToast('❌ Sai mật khẩu!');
+  }
+}
+
+function lockAdmin() {
+  document.getElementById('admin-lock').style.display = 'block';
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-pw-input').value = '';
+}
+
+function calcMoney(sub) {
+  let total = 0;
+  Object.entries(sub.picks).forEach(([matchId, pick]) => {
+    const res = results[matchId];
+    if (!res) return;
+    if (pick === res) total -= 0;
+    else if (pick === 'draw' || res === 'draw') total -= 5000;
+    else total -= 10000;
+  });
+  return total;
+}
+
+function renderAdmin() {
+  submissions = JSON.parse(localStorage.getItem('wc26_submissions') || '[]');
+  results = JSON.parse(localStorage.getItem('wc26_results') || '{}');
+
+  if (!submissions || submissions.length === 0) {
+    document.getElementById('admin-summary').innerHTML = '<div class="empty-msg" style="grid-column:span 3">Chưa có dự đoán nào</div>';
+    document.getElementById('admin-players').innerHTML = '<div class="empty-msg">Chưa có người chơi nào gửi dự đoán</div>';
+    renderAdminMatches();
+    return;
+  }
+
+  let totalPredictions = 0, totalLoss = 0;
+  submissions.forEach(s => {
+    totalPredictions += Object.keys(s.picks).length;
+    const m = calcMoney(s);
+    if (m < 0) totalLoss += Math.abs(m);
+  });
+
+  document.getElementById('admin-summary').innerHTML = `
+    <div class="metric"><div class="metric-val">${submissions.length}</div><div class="metric-lbl">Người chơi</div></div>
+    <div class="metric"><div class="metric-val">${totalPredictions}</div><div class="metric-lbl">Lượt dự đoán</div></div>
+    <div class="metric"><div class="metric-val">${totalLoss.toLocaleString('vi-VN')}đ</div><div class="metric-lbl">Tổng tiền phạt</div></div>
+  `;
+
+  const sorted = [...submissions].map(s => ({...s, money: calcMoney(s)})).sort((a,b) => b.money - a.money);
+  const ranks = ['🥇','🥈','🥉'];
+  let ph = '';
+  sorted.forEach((s, idx) => {
+    const m = s.money;
+    const mStr = m === 0 ? '0đ' : `${m.toLocaleString('vi-VN')}đ`;
+    const mClass = m === 0 ? 'money-zero' : m > 0 ? 'money-pos' : 'money-neg';
+    const picked = Object.entries(s.picks);
+    let pickHtml = '';
+    picked.slice(0, 6).forEach(([mid, pick]) => {
+      const match = MATCHES.find(m => m.id === mid);
+      if (!match) return;
+      const res = results[mid];
+      const isCorrect = res && pick === res;
+      const lblMap = {win:`${match.homeCode} thắng`, draw:'Hòa', lose:`${match.awayCode} thắng`};
+      const rb = !res ? 'rb-pending' : isCorrect ? 'rb-win' : 'rb-lose';
+      pickHtml += `<div class="pick-item">
+        <span>${match.home} vs ${match.away}</span>
+        <span class="res-badge ${rb}">${lblMap[pick]}</span>
+      </div>`;
+    });
+    if (picked.length > 6) pickHtml += `<div style="font-size:11px; color:#aaa; padding-top:4px;">...và ${picked.length-6} trận khác</div>`;
+    ph += `<div class="admin-card">
+      <div class="player-header">
+        <div>
+          <div class="player-name">${ranks[idx] || '🏅'} ${s.name}</div>
+          <div class="player-meta">${s.time} · ${picked.length} trận dự đoán</div>
+        </div>
+        <div class="${mClass}">${mStr}</div>
+      </div>
+      <div class="picks-list">${pickHtml}</div>
+    </div>`;
+  });
+  document.getElementById('admin-players').innerHTML = ph;
+  renderAdminMatches();
+}
+
+function renderAdminMatches() {
+  let html = '<p style="font-size:13px; color:#888; margin-bottom:10px;">Chọn kết quả và bấm Lưu để cập nhật. Hệ thống sẽ tự tính tiền phạt.</p>';
+  MATCHES.forEach(m => {
+    const res = results[m.id] || '';
+    html += `<div class="admin-card" style="margin-bottom:8px;">
+      <div style="font-size:13px; font-weight:600;">${m.home} <span style="color:#aaa; font-weight:400; font-size:11px;">vs</span> ${m.away}</div>
+      <div style="font-size:11px; color:#aaa; margin-top:2px;">${m.date} · Bảng ${m.group}</div>
+      <div class="set-result-row">
+        <select id="res-${m.id}">
+          <option value="" ${!res?'selected':''}>-- Chưa có kết quả --</option>
+          <option value="win" ${res==='win'?'selected':''}>🏆 ${m.homeCode} thắng</option>
+          <option value="draw" ${res==='draw'?'selected':''}>🤝 Hòa</option>
+          <option value="lose" ${res==='lose'?'selected':''}>❌ ${m.awayCode} thắng</option>
+        </select>
+        <button onclick="saveResult('${m.id}')">💾 Lưu</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('admin-matches').innerHTML = html;
+}
+
+function saveResult(matchId) {
+  const val = document.getElementById('res-' + matchId).value;
+  if (val) {
+    results[matchId] = val;
+  } else {
+    delete results[matchId];
+  }
+  localStorage.setItem('wc26_results', JSON.stringify(results));
+  showToast('✅ Đã lưu kết quả!');
+  renderAdmin();
+}
+
+renderFilters();
+renderMatches(null);
+document.getElementById('submit-bar').style.display = 'block';
+</script>
+</body>
+</html>
