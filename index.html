@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dự đoán World Cup 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+.app { max-width: 700px; margin: 0 auto; padding: 0 0 40px; }
+header { background: #0a3d6b; color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+header h1 { font-size: 18px; font-weight: 600; }
+header span { font-size: 13px; opacity: 0.7; }
+.tab-bar { display: flex; background: white; border-bottom: 1px solid #e0e0e0; position: sticky; top: 58px; z-index: 99; }
+.tab { flex: 1; padding: 13px 0; font-size: 14px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; color: #888; text-align: center; transition: all 0.15s; }
+.tab.active { border-bottom-color: #0a3d6b; color: #0a3d6b; }
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+.name-box { background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.name-box label { font-size: 13px; color: #666; display: block; margin-bottom: 10px; font-weight: 500; }
+.name-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-chip { padding: 9px 18px; border: 2px solid #e0e0e0; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: pointer; background: #fafafa; color: #444; transition: all 0.15s; user-select: none; }
+.name-chip:hover { border-color: #0a3d6b; color: #0a3d6b; background: #f0f5ff; }
+.name-chip.selected { background: #0a3d6b; color: white; border-color: #0a3d6b; }
+.name-selected-bar { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; font-size: 14px; color: #555; }
+.name-selected-bar strong { color: #0a3d6b; }
+.no-players-hint { font-size: 13px; color: #bbb; font-style: italic; padding: 4px 0; }
+/* admin name manager */
+.admin-name-input { display: flex; gap: 8px; margin-bottom: 10px; }
+.admin-name-input input { flex: 1; padding: 8px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+.admin-name-input input:focus { border-color: #0a3d6b; }
+.admin-name-input button { padding: 8px 16px; background: #0a3d6b; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.name-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-list-chip { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f0f5ff; border: 1.5px solid #c3daf7; border-radius: 20px; font-size: 13px; font-weight: 600; color: #0a3d6b; }
+.name-list-chip button { background: none; border: none; cursor: pointer; color: #e53935; font-size: 15px; line-height: 1; padding: 0; }
+.section-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; color: #0a3d6b; }
+.day-label { font-size: 13px; font-weight: 700; color: #555; margin: 20px 0 10px; padding: 6px 12px; background: #e8f0fb; border-radius: 8px; display: inline-block; }
+.match-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1.5px solid transparent; transition: border-color 0.15s; }
+.match-card.has-pick { border-color: #c3daf7; }
+.match-header { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 6px; font-weight: 600; }
+.badge-time { background: #f0f0f0; color: #555; }
+.badge-group { background: #e8f0fb; color: #0a3d6b; }
+.badge-played { background: #fff3cd; color: #856404; }
+.teams-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 8px; }
+.team { font-size: 14px; font-weight: 600; flex: 1; }
+.team.right { text-align: right; }
+.vs { font-size: 12px; color: #aaa; font-weight: 700; flex-shrink: 0; }
+.bet-row { display: flex; gap: 8px; }
+.bet-btn { flex: 1; padding: 8px 6px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; background: #fafafa; color: #666; transition: all 0.15s; text-align: center; }
+.bet-btn:hover { background: #f0f0f0; color: #333; }
+.bet-btn.sel-win { background: #eaf5e3; color: #2a7a1a; border-color: #4caf50; }
+.bet-btn.sel-draw { background: #fff8e1; color: #a06000; border-color: #ffc107; }
+.bet-btn.sel-lose { background: #fdecea; color: #b71c1c; border-color: #f44336; }
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-btn { padding: 5px 14px; border: 1.5px solid #e0e0e0; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; background: white; color: #666; transition: all 0.15s; }
+.filter-btn.active { background: #0a3d6b; color: white; border-color: #0a3d6b; }
+.submit-btn { width: 100%; padding: 14px; background: #0a3d6b; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+.submit-btn:hover { opacity: 0.88; }
+.submit-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: rgba(245,245,245,0.97); padding: 12px 16px 20px; box-shadow: 0 -2px 12px rgba(0,0,0,0.12); display:none; }
+/* voters */
+.voters-row { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
+.voter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.voter-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; }
+.voter-chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 20px; }
+.chip { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+.chip-win { background: #eaf5e3; color: #2a7a1a; }
+.chip-draw { background: #fff8e1; color: #a06000; }
+.chip-lose { background: #fdecea; color: #b71c1c; }
+/* admin */
+.admin-pw-wrap { text-align: center; padding: 40px 20px; }
+.admin-pw-wrap h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.admin-pw-wrap p { font-size: 14px; color: #888; margin-bottom: 20px; }
+.admin-pw-wrap input { display: block; width: 240px; margin: 0 auto 12px; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 15px; text-align: center; outline: none; }
+.admin-pw-wrap button { padding: 10px 32px; background: #0a3d6b; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.admin-pw-wrap .hint { font-size: 12px; color: #aaa; margin-top: 10px; }
+.summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
+.metric { background: white; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.metric-val { font-size: 24px; font-weight: 700; color: #0a3d6b; }
+.metric-lbl { font-size: 12px; color: #888; margin-top: 4px; }
+.admin-card { background: white; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.player-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.player-name { font-size: 16px; font-weight: 700; }
+.player-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
+.money-pos { color: #2a7a1a; font-size: 18px; font-weight: 700; }
+.money-neg { color: #b71c1c; font-size: 18px; font-weight: 700; }
+.money-zero { color: #555; font-size: 18px; font-weight: 700; }
+.picks-list { border-top: 1px solid #f0f0f0; padding-top: 8px; }
+.pick-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #f8f8f8; font-size: 12px; }
+.pick-item:last-child { border-bottom: none; }
+.res-badge { font-size: 11px; padding: 2px 10px; border-radius: 6px; font-weight: 600; }
+.rb-win { background: #eaf5e3; color: #2a7a1a; }
+.rb-lose { background: #fdecea; color: #b71c1c; }
+.rb-pending { background: #f0f0f0; color: #888; }
+.set-result-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.set-result-row select { flex: 1; padding: 7px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: white; }
+.set-result-row button { padding: 7px 16px; background: #0a3d6b; color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.logout-btn { padding: 6px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; cursor: pointer; background: white; color: #666; font-weight: 600; }
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #0a3d6b; color: white; padding: 10px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.2); white-space: nowrap; }
+.toast.show { opacity: 1; }
+.empty-msg { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
+.penalty-info { background: #fff8e1; border: 1px solid #ffc107; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #7a5000; }
+.penalty-info strong { display: block; margin-bottom: 4px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span style="font-size:28px;">⚽</span>
+    <div>
+      <h1>World Cup 2026 — Dự đoán</h1>
+      <span>Vòng bảng từ 15/06 đến 28/06</span>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('predict')">⚽ Dự đoán</div>
+    <div class="tab" onclick="switchTab('admin')">🛡️ Admin</div>
+  </div>
+
+  <div id="page-predict" class="page active">
+    <div class="name-box">
+      <label>👤 Chọn tên người dự đoán</label>
+      <div class="name-grid" id="name-grid"></div>
+      <div class="name-selected-bar" id="name-selected-bar" style="display:none;">
+        Đang chọn: <strong id="name-selected-text"></strong>
+      </div>
+    </div>
+    <div class="penalty-info">
+      <strong>💰 Luật tính tiền</strong>
+      Đoán đúng → Không mất gì &nbsp;|&nbsp; Hòa → -5.000đ &nbsp;|&nbsp; Đoán sai → -10.000đ
+    </div>
+    <div class="section-title">Lịch thi đấu vòng bảng</div>
+    <div class="filter-row" id="filter-row"></div>
+    <div id="matches-container" style="padding-bottom:80px;"></div>
+  </div>
+
+  <div id="page-admin" class="page">
+    <div id="admin-lock">
+      <div class="admin-pw-wrap">
+        <h2>🛡️ Trang quản trị</h2>
+        <p>Nhập mật khẩu để xem và chỉnh sửa kết quả</p>
+        <input type="password" id="admin-pw-input" placeholder="Mật khẩu" onkeydown="if(event.key==='Enter')checkAdmin()" />
+        <button onclick="checkAdmin()">Đăng nhập</button>
+        <p class="hint">Mật khẩu mặc định: <strong>admin123</strong></p>
+      </div>
+    </div>
+    <div id="admin-panel" style="display:none;">
+      <div class="admin-top">
+        <div class="section-title" style="margin:0;">📊 Tổng kết</div>
+        <button class="logout-btn" onclick="lockAdmin()">Đăng xuất</button>
+      </div>
+      <div class="section-title" style="font-size:15px;margin-bottom:10px;">👥 Quản lý danh sách tên</div>
+      <div class="admin-card" style="margin-bottom:16px;">
+        <div class="admin-name-input">
+          <input type="text" id="new-name-input" placeholder="Thêm tên người chơi..." onkeydown="if(event.key==='Enter')addPlayerName()" />
+          <button onclick="addPlayerName()">➕ Thêm</button>
+        </div>
+        <div class="name-list" id="admin-name-list"></div>
+      </div>
+      <div class="summary-grid" id="admin-summary"></div>
+      <div class="section-title" style="font-size:15px;margin-bottom:10px;">✏️ Cập nhật kết quả thực tế</div>
+      <div id="admin-matches"></div>
+      <div class="section-title" style="font-size:15px;margin:20px 0 10px;">🏆 Bảng xếp hạng người chơi</div>
+      <div id="admin-players"></div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar" id="submit-bar">
+  <button class="submit-btn" onclick="submitPrediction()">📤 Gửi dự đoán</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// Lịch thi đấu World Cup 2026 - Vòng bảng (từ 15/06) - Theo file Excel chính thức
+const MATCHES = [
+  // ===== 15/06 =====
+  {id:'m01',date:'15/06',time:'07:00',group:'E',home:'🇩🇪 Đức',away:'🇨🇼 Curaçao',homeCode:'GER',awayCode:'CUW'},
+  {id:'m02',date:'15/06',time:'10:00',group:'F',home:'🇳🇱 Hà Lan',away:'🇯🇵 Nhật Bản',homeCode:'NED',awayCode:'JPN'},
+  {id:'m03',date:'15/06',time:'13:00',group:'E',home:'🇨🇮 Bờ Biển Ngà',away:'🇪🇨 Ecuador',homeCode:'CIV',awayCode:'ECU'},
+  {id:'m04',date:'15/06',time:'16:00',group:'F',home:'🇸🇪 Thụy Điển',away:'🇹🇳 Tunisia',homeCode:'SWE',awayCode:'TUN'},
+  {id:'m05',date:'15/06',time:'23:00',group:'H',home:'🇪🇸 Tây Ban Nha',away:'🇨🇻 Cape Verde',homeCode:'ESP',awayCode:'CPV'},
+  // ===== 16/06 =====
+  {id:'m06',date:'16/06',time:'02:00',group:'G',home:'🇧🇪 Bỉ',away:'🇪🇬 Ai Cập',homeCode:'BEL',awayCode:'EGY'},
+  {id:'m07',date:'16/06',time:'05:00',group:'H',home:'🇸🇦 Saudi Arabia',away:'🇺🇾 Uruguay',homeCode:'KSA',awayCode:'URU'},
+  {id:'m08',date:'16/06',time:'08:00',group:'G',home:'🇮🇷 Iran',away:'🇳🇿 New Zealand',homeCode:'IRN',awayCode:'NZL'},
+  // ===== 17/06 =====
+  {id:'m09',date:'17/06',time:'02:00',group:'I',home:'🇫🇷 Pháp',away:'🇸🇳 Senegal',homeCode:'FRA',awayCode:'SEN'},
+  {id:'m10',date:'17/06',time:'05:00',group:'I',home:'🇮🇶 Iraq',away:'🇳🇴 Na Uy',homeCode:'IRQ',awayCode:'NOR'},
+  {id:'m11',date:'17/06',time:'08:00',group:'J',home:'🇦🇷 Argentina',away:'🇩🇿 Algeria',homeCode:'ARG',awayCode:'ALG'},
+  {id:'m12',date:'17/06',time:'11:00',group:'J',home:'🇦🇹 Áo',away:'🇯🇴 Jordan',homeCode:'AUT',awayCode:'JOR'},
+  // ===== 18/06 =====
+  {id:'m13',date:'18/06',time:'07:00',group:'K',home:'🇵🇹 Bồ Đào Nha',away:'🇨🇩 CHDC Congo',homeCode:'POR',awayCode:'COD'},
+  {id:'m14',date:'18/06',time:'10:00',group:'L',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',away:'🇭🇷 Croatia',homeCode:'ENG',awayCode:'CRO'},
+  {id:'m15',date:'18/06',time:'13:00',group:'L',home:'🇬🇭 Ghana',away:'🇵🇦 Panama',homeCode:'GHA',awayCode:'PAN'},
+  {id:'m16',date:'18/06',time:'16:00',group:'K',home:'🇺🇿 Uzbekistan',away:'🇨🇴 Colombia',homeCode:'UZB',awayCode:'COL'},
+  {id:'m17',date:'18/06',time:'23:00',group:'A',home:'🇨🇿 CH Séc',away:'🇿🇦 Nam Phi',homeCode:'CZE',awayCode:'RSA'},
+  // ===== 19/06 =====
+  {id:'m18',date:'19/06',time:'02:00',group:'B',home:'🇨🇭 Thụy Sĩ',away:'🇧🇦 Bosnia & Herzegovina',homeCode:'SUI',awayCode:'BIH'},
+  {id:'m19',date:'19/06',time:'05:00',group:'B',home:'🇨🇦 Canada',away:'🇶🇦 Qatar',homeCode:'CAN',awayCode:'QAT'},
+  {id:'m20',date:'19/06',time:'08:00',group:'A',home:'🇲🇽 Mexico',away:'🇰🇷 Hàn Quốc',homeCode:'MEX',awayCode:'KOR'},
+  // ===== 20/06 =====
+  {id:'m21',date:'20/06',time:'02:00',group:'D',home:'🇺🇸 Mỹ',away:'🇦🇺 Australia',homeCode:'USA',awayCode:'AUS'},
+  {id:'m22',date:'20/06',time:'05:00',group:'C',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',away:'🇲🇦 Morocco',homeCode:'SCO',awayCode:'MAR'},
+  {id:'m23',date:'20/06',time:'07:30',group:'C',home:'🇧🇷 Brazil',away:'🇭🇹 Haiti',homeCode:'BRA',awayCode:'HAI'},
+  {id:'m24',date:'20/06',time:'10:00',group:'D',home:'🇹🇷 Thổ Nhĩ Kỳ',away:'🇵🇾 Paraguay',homeCode:'TUR',awayCode:'PAR'},
+  // ===== 21/06 =====
+  {id:'m25',date:'21/06',time:'07:00',group:'F',home:'🇳🇱 Hà Lan',away:'🇸🇪 Thụy Điển',homeCode:'NED',awayCode:'SWE'},
+  {id:'m26',date:'21/06',time:'10:00',group:'E',home:'🇩🇪 Đức',away:'🇨🇮 Bờ Biển Ngà',homeCode:'GER',awayCode:'CIV'},
+  {id:'m27',date:'21/06',time:'13:00',group:'E',home:'🇪🇨 Ecuador',away:'🇨🇼 Curaçao',homeCode:'ECU',awayCode:'CUW'},
+  {id:'m28',date:'21/06',time:'16:00',group:'F',home:'🇹🇳 Tunisia',away:'🇯🇵 Nhật Bản',homeCode:'TUN',awayCode:'JPN'},
+  {id:'m29',date:'21/06',time:'23:00',group:'H',home:'🇪🇸 Tây Ban Nha',away:'🇸🇦 Saudi Arabia',homeCode:'ESP',awayCode:'KSA'},
+  // ===== 22/06 =====
+  {id:'m30',date:'22/06',time:'02:00',group:'G',home:'🇧🇪 Bỉ',away:'🇮🇷 Iran',homeCode:'BEL',awayCode:'IRN'},
+  {id:'m31',date:'22/06',time:'05:00',group:'H',home:'🇺🇾 Uruguay',away:'🇨🇻 Cape Verde',homeCode:'URU',awayCode:'CPV'},
+  {id:'m32',date:'22/06',time:'08:00',group:'G',home:'🇳🇿 New Zealand',away:'🇪🇬 Ai Cập',homeCode:'NZL',awayCode:'EGY'},
+  // ===== 23/06 =====
+  {id:'m33',date:'23/06',time:'07:00',group:'J',home:'🇦🇷 Argentina',away:'🇦🇹 Áo',homeCode:'ARG',awayCode:'AUT'},
+  {id:'m34',date:'23/06',time:'10:00',group:'I',home:'🇫🇷 Pháp',away:'🇮🇶 Iraq',homeCode:'FRA',awayCode:'IRQ'},
+  {id:'m35',date:'23/06',time:'13:00',group:'I',home:'🇳🇴 Na Uy',away:'🇸🇳 Senegal',homeCode:'NOR',awayCode:'SEN'},
+  {id:'m36',date:'23/06',time:'16:00',group:'J',home:'🇯🇴 Jordan',away:'🇩🇿 Algeria',homeCode:'JOR',awayCode:'ALG'},
+  // ===== 24/06 =====
+  {id:'m37',date:'24/06',time:'07:00',group:'K',home:'🇵🇹 Bồ Đào Nha',away:'🇺🇿 Uzbekistan',homeCode:'POR',awayCode:'UZB'},
+  {id:'m38',date:'24/06',time:'10:00',group:'L',home:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',away:'🇬🇭 Ghana',homeCode:'ENG',awayCode:'GHA'},
+  {id:'m39',date:'24/06',time:'13:00',group:'L',home:'🇵🇦 Panama',away:'🇭🇷 Croatia',homeCode:'PAN',awayCode:'CRO'},
+  {id:'m40',date:'24/06',time:'16:00',group:'K',home:'🇨🇴 Colombia',away:'🇨🇩 CHDC Congo',homeCode:'COL',awayCode:'COD'},
+  // ===== 25/06 =====
+  {id:'m41',date:'25/06',time:'02:00',group:'B',home:'🇨🇭 Thụy Sĩ',away:'🇨🇦 Canada',homeCode:'SUI',awayCode:'CAN'},
+  {id:'m42',date:'25/06',time:'02:00',group:'B',home:'🇧🇦 Bosnia & Herzegovina',away:'🇶🇦 Qatar',homeCode:'BIH',awayCode:'QAT'},
+  {id:'m43',date:'25/06',time:'05:00',group:'C',home:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland',away:'🇧🇷 Brazil',homeCode:'SCO',awayCode:'BRA'},
+  {id:'m44',date:'25/06',time:'05:00',group:'C',home:'🇲🇦 Morocco',away:'🇭🇹 Haiti',homeCode:'MAR',awayCode:'HAI'},
+  {id:'m45',date:'25/06',time:'08:00',group:'A',home:'🇨🇿 CH Séc',away:'🇲🇽 Mexico',homeCode:'CZE',awayCode:'MEX'},
+  {id:'m46',date:'25/06',time:'08:00',group:'A',home:'🇿🇦 Nam Phi',away:'🇰🇷 Hàn Quốc',homeCode:'RSA',awayCode:'KOR'},
+  // ===== 26/06 =====
+  {id:'m47',date:'26/06',time:'03:00',group:'E',home:'🇨🇼 Curaçao',away:'🇨🇮 Bờ Biển Ngà',homeCode:'CUW',awayCode:'CIV'},
+  {id:'m48',date:'26/06',time:'03:00',group:'E',home:'🇪🇨 Ecuador',away:'🇩🇪 Đức',homeCode:'ECU',awayCode:'GER'},
+  {id:'m49',date:'26/06',time:'06:00',group:'F',home:'🇯🇵 Nhật Bản',away:'🇸🇪 Thụy Điển',homeCode:'JPN',awayCode:'SWE'},
+  {id:'m50',date:'26/06',time:'06:00',group:'F',home:'🇹🇳 Tunisia',away:'🇳🇱 Hà Lan',homeCode:'TUN',awayCode:'NED'},
+  {id:'m51',date:'26/06',time:'09:00',group:'D',home:'🇹🇷 Thổ Nhĩ Kỳ',away:'🇺🇸 Mỹ',homeCode:'TUR',awayCode:'USA'},
+  {id:'m52',date:'26/06',time:'09:00',group:'D',home:'🇵🇾 Paraguay',away:'🇦🇺 Australia',homeCode:'PAR',awayCode:'AUS'},
+  // ===== 27/06 =====
+  {id:'m53',date:'27/06',time:'02:00',group:'I',home:'🇳🇴 Na Uy',away:'🇫🇷 Pháp',homeCode:'NOR',awayCode:'FRA'},
+  {id:'m54',date:'27/06',time:'02:00',group:'I',home:'🇸🇳 Senegal',away:'🇮🇶 Iraq',homeCode:'SEN',awayCode:'IRQ'},
+  {id:'m55',date:'27/06',time:'07:00',group:'H',home:'🇨🇻 Cape Verde',away:'🇸🇦 Saudi Arabia',homeCode:'CPV',awayCode:'KSA'},
+  {id:'m56',date:'27/06',time:'07:00',group:'H',home:'🇺🇾 Uruguay',away:'🇪🇸 Tây Ban Nha',homeCode:'URU',awayCode:'ESP'},
+  {id:'m57',date:'27/06',time:'10:00',group:'G',home:'🇪🇬 Ai Cập',away:'🇮🇷 Iran',homeCode:'EGY',awayCode:'IRN'},
+  {id:'m58',date:'27/06',time:'10:00',group:'G',home:'🇳🇿 New Zealand',away:'🇧🇪 Bỉ',homeCode:'NZL',awayCode:'BEL'},
+  // ===== 28/06 =====
+  {id:'m59',date:'28/06',time:'04:00',group:'L',home:'🇵🇦 Panama',away:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Anh',homeCode:'PAN',awayCode:'ENG'},
+  {id:'m60',date:'28/06',time:'04:00',group:'L',home:'🇭🇷 Croatia',away:'🇬🇭 Ghana',homeCode:'CRO',awayCode:'GHA'},
+  {id:'m61',date:'28/06',time:'06:30',group:'K',home:'🇨🇴 Colombia',away:'🇵🇹 Bồ Đào Nha',homeCode:'COL',awayCode:'POR'},
+  {id:'m62',date:'28/06',time:'06:30',group:'K',home:'🇨🇩 CHDC Congo',away:'🇺🇿 Uzbekistan',homeCode:'COD',awayCode:'UZB'},
+  {id:'m63',date:'28/06',time:'09:00',group:'J',home:'🇩🇿 Algeria',away:'🇦🇹 Áo',homeCode:'ALG',awayCode:'AUT'},
+  {id:'m64',date:'28/06',time:'09:00',group:'J',home:'🇯🇴 Jordan',away:'🇦🇷 Argentina',homeCode:'JOR',awayCode:'ARG'},
+];
+
+let picks = {};
+let playerName = '';
+let submissions = JSON.parse(localStorage.getItem('wc26_subs') || '[]');
+let results = JSON.parse(localStorage.getItem('wc26_results') || '{}');
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='predict')||(i===1&&tab==='admin')));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('submit-bar').style.display = tab==='predict'?'block':'none';
+  if(tab==='admin') renderAdmin();
+}
+
+let PLAYERS = JSON.parse(localStorage.getItem('wc26_players') || '["An","Bình","Cường","Dung","Em","Phong"]');
+
+function renderNameGrid() {
+  const grid = document.getElementById('name-grid');
+  if(!PLAYERS.length){
+    grid.innerHTML = '<div class="no-players-hint">Admin chưa thêm tên người chơi</div>';
+    return;
+  }
+  grid.innerHTML = PLAYERS.map(n =>
+    `<div class="name-chip ${playerName===n?'selected':''}" onclick="selectName('${n}')">${n}</div>`
+  ).join('');
+}
+
+function selectName(name) {
+  playerName = name;
+  document.querySelectorAll('.name-chip').forEach(c => c.classList.toggle('selected', c.textContent===name));
+  const bar = document.getElementById('name-selected-bar');
+  bar.style.display = 'block';
+  document.getElementById('name-selected-text').textContent = name;
+}
+
+function addPlayerName() {
+  const inp = document.getElementById('new-name-input');
+  const name = inp.value.trim();
+  if(!name){ showToast('⚠️ Nhập tên trước!'); return; }
+  if(PLAYERS.includes(name)){ showToast('⚠️ Tên đã có trong danh sách!'); return; }
+  PLAYERS.push(name);
+  localStorage.setItem('wc26_players', JSON.stringify(PLAYERS));
+  inp.value = '';
+  renderAdminNameList();
+  renderNameGrid();
+  showToast(`✅ Đã thêm "${name}"`);
+}
+
+function removePlayerName(name) {
+  PLAYERS = PLAYERS.filter(n=>n!==name);
+  localStorage.setItem('wc26_players', JSON.stringify(PLAYERS));
+  if(playerName===name){ playerName=''; document.getElementById('name-selected-bar').style.display='none'; }
+  renderAdminNameList();
+  renderNameGrid();
+  showToast(`🗑️ Đã xoá "${name}"`);
+}
+
+function renderAdminNameList() {
+  PLAYERS = JSON.parse(localStorage.getItem('wc26_players') || '[]');
+  const el = document.getElementById('admin-name-list');
+  if(!el) return;
+  el.innerHTML = PLAYERS.length
+    ? PLAYERS.map(n=>`<div class="name-list-chip">${n} <button onclick="removePlayerName('${n}')" title="Xoá">✕</button></div>`).join('')
+    : '<div class="no-players-hint">Chưa có tên nào</div>';
+}
+
+function getDates() { return [...new Set(MATCHES.map(m=>m.date))]; }
+
+function getVoters(matchId) {
+  const v={win:[],draw:[],lose:[]};
+  submissions.forEach(s=>{ if(s.picks[matchId]) v[s.picks[matchId]].push(s.name); });
+  return v;
+}
+
+function votersRow(matchId, m) {
+  const v=getVoters(matchId);
+  if(!v.win.length&&!v.draw.length&&!v.lose.length) return '';
+  const chips=(names,cls)=>names.map(n=>`<span class="chip ${cls}">${n}</span>`).join('');
+  return `<div class="voters-row">
+    <div class="voter-group"><div class="voter-group-label">🏆 ${m.homeCode}</div><div class="voter-chips">${chips(v.win,'chip-win')}</div></div>
+    <div class="voter-group"><div class="voter-group-label">🤝 Hòa</div><div class="voter-chips">${chips(v.draw,'chip-draw')}</div></div>
+    <div class="voter-group"><div class="voter-group-label">❌ ${m.awayCode}</div><div class="voter-chips">${chips(v.lose,'chip-lose')}</div></div>
+  </div>`;
+}
+
+function renderMatches(filterDate) {
+  submissions = JSON.parse(localStorage.getItem('wc26_subs')||'[]');
+  const cont = document.getElementById('matches-container');
+  let html = '';
+  getDates().forEach(date => {
+    if(filterDate && date!==filterDate) return;
+    const day = MATCHES.filter(m=>m.date===date);
+    html += `<div class="day-label">📅 Ngày ${date} · ${day.length} trận</div>`;
+    day.forEach(m => {
+      const p=picks[m.id]||'';
+      const res=results[m.id];
+      html += `<div class="match-card ${p?'has-pick':''}" id="card-${m.id}">
+        <div class="match-header">
+          <span class="badge badge-time">⏰ ${m.time}</span>
+          <span class="badge badge-group">Bảng ${m.group}</span>
+          ${res?'<span class="badge badge-played">KT</span>':''}
+        </div>
+        <div class="teams-row">
+          <div class="team">${m.home}</div>
+          <div class="vs">VS</div>
+          <div class="team right">${m.away}</div>
+        </div>
+        <div class="bet-row">
+          <div class="bet-btn ${p==='win'?'sel-win':''}" onclick="setPick('${m.id}','win',this)">🏆 ${m.homeCode} thắng</div>
+          <div class="bet-btn ${p==='draw'?'sel-draw':''}" onclick="setPick('${m.id}','draw',this)">🤝 Hòa</div>
+          <div class="bet-btn ${p==='lose'?'sel-lose':''}" onclick="setPick('${m.id}','lose',this)">❌ ${m.awayCode} thắng</div>
+        </div>
+        ${votersRow(m.id,m)}
+      </div>`;
+    });
+  });
+  cont.innerHTML = html;
+}
+
+function renderFilters() {
+  let html=`<div class="filter-btn active" data-date="" onclick="filterDate('',this)">Tất cả</div>`;
+  getDates().forEach(d=>{ html+=`<div class="filter-btn" data-date="${d}" onclick="filterDate('${d}',this)">📅 ${d}</div>`; });
+  document.getElementById('filter-row').innerHTML=html;
+}
+
+function filterDate(d, el) {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderMatches(d||null);
+}
+
+function setPick(id, choice, el) {
+  picks[id]=choice;
+  el.closest('.bet-row').querySelectorAll('.bet-btn').forEach(b=>b.className='bet-btn');
+  el.classList.add(choice==='win'?'sel-win':choice==='draw'?'sel-draw':'sel-lose');
+  el.closest('.match-card').classList.add('has-pick');
+}
+
+function submitPrediction() {
+  if(!playerName){ showToast('⚠️ Vui lòng nhập tên!'); return; }
+  const cnt=Object.keys(picks).length;
+  if(!cnt){ showToast('⚠️ Chưa chọn trận nào!'); return; }
+  const entry={name:playerName,picks:{...picks},time:new Date().toLocaleString('vi-VN')};
+  const idx=submissions.findIndex(s=>s.name===playerName);
+  if(idx>=0) submissions[idx]=entry; else submissions.push(entry);
+  localStorage.setItem('wc26_subs',JSON.stringify(submissions));
+  showToast(`✅ Đã lưu ${cnt} dự đoán cho ${playerName}!`);
+  const af=document.querySelector('.filter-btn.active');
+  renderMatches(af&&af.dataset.date?af.dataset.date:null);
+}
+
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function checkAdmin() {
+  if(document.getElementById('admin-pw-input').value==='admin123'){
+    document.getElementById('admin-lock').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    renderAdmin();
+  } else showToast('❌ Sai mật khẩu!');
+}
+
+function lockAdmin() {
+  document.getElementById('admin-lock').style.display='block';
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('admin-pw-input').value='';
+}
+
+function calcMoney(sub) {
+  let t=0;
+  Object.entries(sub.picks).forEach(([mid,pick])=>{
+    const r=results[mid]; if(!r) return;
+    if(pick!==r) t-=(pick==='draw'||r==='draw')?5000:10000;
+  });
+  return t;
+}
+
+function renderAdmin() {
+  submissions=JSON.parse(localStorage.getItem('wc26_subs')||'[]');
+  results=JSON.parse(localStorage.getItem('wc26_results')||'{}');
+  renderAdminNameList();
+  if(!submissions.length){
+    document.getElementById('admin-summary').innerHTML='<div class="empty-msg" style="grid-column:span 3">Chưa có dự đoán nào</div>';
+    document.getElementById('admin-players').innerHTML='<div class="empty-msg">Chưa có người chơi nào</div>';
+    renderAdminMatches(); return;
+  }
+  let tp=0,tl=0;
+  submissions.forEach(s=>{ tp+=Object.keys(s.picks).length; const m=calcMoney(s); if(m<0)tl+=Math.abs(m); });
+  document.getElementById('admin-summary').innerHTML=`
+    <div class="metric"><div class="metric-val">${submissions.length}</div><div class="metric-lbl">Người chơi</div></div>
+    <div class="metric"><div class="metric-val">${tp}</div><div class="metric-lbl">Lượt dự đoán</div></div>
+    <div class="metric"><div class="metric-val">${tl.toLocaleString('vi-VN')}đ</div><div class="metric-lbl">Tổng tiền phạt</div></div>`;
+  const sorted=[...submissions].map(s=>({...s,money:calcMoney(s)})).sort((a,b)=>b.money-a.money);
+  const ranks=['🥇','🥈','🥉'];
+  let ph='';
+  sorted.forEach((s,i)=>{
+    const m=s.money, mStr=m===0?'0đ':`${m.toLocaleString('vi-VN')}đ`;
+    const mc=m===0?'money-zero':m>0?'money-pos':'money-neg';
+    const picked=Object.entries(s.picks);
+    let ph2='';
+    picked.slice(0,6).forEach(([mid,pick])=>{
+      const match=MATCHES.find(x=>x.id===mid); if(!match) return;
+      const r=results[mid];
+      const lbl={win:`${match.homeCode} thắng`,draw:'Hòa',lose:`${match.awayCode} thắng`};
+      const rb=!r?'rb-pending':pick===r?'rb-win':'rb-lose';
+      ph2+=`<div class="pick-item"><span>${match.home} vs ${match.away}</span><span class="res-badge ${rb}">${lbl[pick]}</span></div>`;
+    });
+    if(picked.length>6) ph2+=`<div style="font-size:11px;color:#aaa;padding-top:4px;">...và ${picked.length-6} trận khác</div>`;
+    ph+=`<div class="admin-card">
+      <div class="player-header">
+        <div><div class="player-name">${ranks[i]||'🏅'} ${s.name}</div><div class="player-meta">${s.time} · ${picked.length} trận</div></div>
+        <div class="${mc}">${mStr}</div>
+      </div><div class="picks-list">${ph2}</div></div>`;
+  });
+  document.getElementById('admin-players').innerHTML=ph;
+  renderAdminMatches();
+}
+
+function renderAdminMatches() {
+  let html='<p style="font-size:13px;color:#888;margin-bottom:10px;">Nhập kết quả thực tế để tính tiền phạt tự động</p>';
+  MATCHES.forEach(m=>{
+    const r=results[m.id]||'';
+    html+=`<div class="admin-card" style="margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:600;">${m.home} <span style="color:#aaa;font-weight:400;font-size:11px">vs</span> ${m.away}</div>
+      <div style="font-size:11px;color:#aaa;margin-top:2px;">${m.date} ${m.time} · Bảng ${m.group}</div>
+      <div class="set-result-row">
+        <select id="res-${m.id}">
+          <option value="" ${!r?'selected':''}>-- Chưa có kết quả --</option>
+          <option value="win" ${r==='win'?'selected':''}>🏆 ${m.homeCode} thắng</option>
+          <option value="draw" ${r==='draw'?'selected':''}>🤝 Hòa</option>
+          <option value="lose" ${r==='lose'?'selected':''}>❌ ${m.awayCode} thắng</option>
+        </select>
+        <button onclick="saveResult('${m.id}')">💾 Lưu</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('admin-matches').innerHTML=html;
+}
+
+function saveResult(matchId) {
+  const val=document.getElementById('res-'+matchId).value;
+  if(val) results[matchId]=val; else delete results[matchId];
+  localStorage.setItem('wc26_results',JSON.stringify(results));
+  showToast('✅ Đã lưu kết quả!');
+  renderAdmin();
+}
+
+renderFilters();
+renderNameGrid();
+renderMatches(null);
+document.getElementById('submit-bar').style.display='block';
+</script>
+</body>
+</html>
